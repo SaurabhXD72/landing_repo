@@ -31,15 +31,38 @@ const Contact = () => {
     setStatus('');
 
     try {
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/contact`, formData);
+      console.log('Submitting form data:', formData);
+      console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
       
-      if (response.status === 200) {
+      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/contact`, formData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 10000, // 10 second timeout
+      });
+      
+      console.log('Form submission response:', response);
+      
+      if (response.status === 200 && response.data.success) {
         setStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
+        
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => setStatus(''), 5000);
+      } else {
+        setStatus('error');
       }
     } catch (error) {
       console.error('Contact form error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
       setStatus('error');
+      
+      // Auto-hide error message after 5 seconds
+      setTimeout(() => setStatus(''), 5000);
     } finally {
       setLoading(false);
     }
@@ -75,7 +98,7 @@ const Contact = () => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white placeholder-slate-400"
+                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white placeholder-slate-400 transition-all duration-200"
                   placeholder="Your name"
                 />
               </div>
@@ -91,7 +114,7 @@ const Contact = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white placeholder-slate-400"
+                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white placeholder-slate-400 transition-all duration-200"
                   placeholder="your.email@example.com"
                 />
               </div>
@@ -107,7 +130,7 @@ const Contact = () => {
                   value={formData.subject}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white placeholder-slate-400"
+                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white placeholder-slate-400 transition-all duration-200"
                   placeholder="What's this about?"
                 />
               </div>
@@ -123,7 +146,7 @@ const Contact = () => {
                   onChange={handleChange}
                   required
                   rows={6}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white placeholder-slate-400 resize-none"
+                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-400 focus:border-transparent text-white placeholder-slate-400 resize-none transition-all duration-200"
                   placeholder="Tell me more about your project, idea, or just say hi..."
                 />
               </div>
@@ -131,22 +154,42 @@ const Contact = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-3 bg-amber-400 text-slate-900 font-semibold rounded-lg hover:bg-amber-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-6 py-3 bg-amber-400 text-slate-900 font-semibold rounded-lg hover:bg-amber-300 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
               >
-                {loading ? 'Sending...' : 'Send Message'}
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Sending...
+                  </div>
+                ) : (
+                  'Send Message'
+                )}
               </button>
             </form>
 
             {/* Status Messages */}
             {status === 'success' && (
-              <div className="mt-6 p-4 bg-green-500/20 border border-green-500/30 rounded-lg">
-                <p className="text-green-400">✅ Message sent successfully! I'll get back to you soon.</p>
+              <div className="mt-6 p-4 bg-green-500/20 border border-green-500/30 rounded-lg animate-fade-in">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-green-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <p className="text-green-400 font-medium">✅ Message sent successfully! I'll get back to you soon.</p>
+                </div>
               </div>
             )}
 
             {status === 'error' && (
-              <div className="mt-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg">
-                <p className="text-red-400">❌ Something went wrong. Please try again or email me directly.</p>
+              <div className="mt-6 p-4 bg-red-500/20 border border-red-500/30 rounded-lg animate-fade-in">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-red-400 font-medium">❌ Something went wrong. Please try again or email me directly.</p>
+                </div>
               </div>
             )}
           </div>
