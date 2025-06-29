@@ -29,42 +29,70 @@ const Contact = () => {
     setLoading(true);
     setStatus('');
 
+    // Log form submission attempt
+    console.log('=== CONTACT FORM SUBMISSION START ===');
+    console.log('Form data being submitted:', formData);
+    console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
+    console.log('Full endpoint URL:', `${process.env.REACT_APP_BACKEND_URL}/api/contact`);
+
     try {
-      console.log('Submitting form data:', formData);
-      console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
-      
-      // Use fetch instead of axios for better debugging
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/contact`, {
+      // Force the request to be visible in Network tab
+      const requestUrl = `${process.env.REACT_APP_BACKEND_URL}/api/contact`;
+      const requestOptions = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(formData),
-      });
+        mode: 'cors',
+        credentials: 'same-origin',
+      };
+
+      console.log('Making fetch request with options:', requestOptions);
+      console.log('Request URL:', requestUrl);
+
+      // This WILL show up in Network tab
+      const response = await fetch(requestUrl, requestOptions);
       
+      console.log('Fetch response received:', response);
       console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
+      console.log('Response ok:', response.ok);
+      console.log('Response headers:', [...response.headers.entries()]);
       
-      const responseData = await response.json();
-      console.log('Response data:', responseData);
+      let responseData;
+      try {
+        responseData = await response.json();
+        console.log('Response data parsed:', responseData);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        const textResponse = await response.text();
+        console.log('Response as text:', textResponse);
+        throw new Error('Invalid JSON response from server');
+      }
       
       if (response.ok && responseData.success) {
+        console.log('✅ SUCCESS: Form submitted successfully');
         setStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
         
         // Auto-hide success message after 5 seconds
         setTimeout(() => setStatus(''), 5000);
       } else {
-        console.error('Server responded with error:', responseData);
+        console.error('❌ SERVER ERROR: Server responded with error:', responseData);
         setStatus('error');
         setTimeout(() => setStatus(''), 5000);
       }
     } catch (error) {
-      console.error('Network or parsing error:', error);
+      console.error('❌ NETWORK ERROR: Failed to submit form:', error);
+      console.error('Error type:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       setStatus('error');
       setTimeout(() => setStatus(''), 5000);
     } finally {
       setLoading(false);
+      console.log('=== CONTACT FORM SUBMISSION END ===');
     }
   };
 
@@ -85,6 +113,11 @@ const Contact = () => {
           {/* Contact Form */}
           <div className="bg-slate-800/50 rounded-xl p-8">
             <h2 className="text-2xl font-bold mb-6 text-amber-400">Send a Message</h2>
+            
+            {/* Debug Info */}
+            <div className="mb-4 p-2 bg-slate-700/50 rounded text-xs text-slate-400">
+              <strong>Debug:</strong> Backend URL: {process.env.REACT_APP_BACKEND_URL}
+            </div>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>

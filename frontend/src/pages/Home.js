@@ -306,16 +306,16 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Contact CTA Section - Moved below photography section with proper spacing */}
-      <section className="py-24">
+      {/* Contact CTA Section - FIXED MOBILE SPACING */}
+      <section className="py-32 sm:py-24">
         <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold mb-4 text-amber-400">Let's Build Something Together</h2>
-          <p className="text-slate-300 text-lg mb-8 max-w-2xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6 text-amber-400">Let's Build Something Together</h2>
+          <p className="text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
             Have an idea? Want to collaborate? Or just want to say hello? I'd love to hear from you.
           </p>
           <Link
             to="/contact"
-            className="px-8 py-3 bg-amber-400 text-slate-900 font-semibold rounded-lg hover:bg-amber-300 transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
+            className="inline-block px-8 py-4 bg-amber-400 text-slate-900 font-semibold rounded-lg hover:bg-amber-300 transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
           >
             Get In Touch
           </Link>
