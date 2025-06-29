@@ -26,15 +26,12 @@ const Header = () => {
     }`}>
       <nav className="container mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
+          {/* Logo - Single consistent logo */}
           <Link 
             to="/" 
             className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
           >
-            <Logo className="w-10 h-10" animate={true} />
-            <span className="text-xl font-bold text-white hidden sm:block">
-              SD
-            </span>
+            <Logo className="w-12 h-12" animate={true} />
           </Link>
 
           {/* Desktop Navigation */}
@@ -74,9 +71,9 @@ const Header = () => {
           </button>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Fixed background blur issue */}
         {isMobileMenuOpen && (
-          <div className="md:hidden mt-4 py-4 border-t border-slate-700">
+          <div className="md:hidden mt-4 py-4 border-t border-slate-700 bg-slate-900/95 backdrop-blur-md rounded-lg">
             {[
               { path: '/', label: 'Home' },
               { path: '/blog', label: 'Blog' },
@@ -87,7 +84,7 @@ const Header = () => {
                 key={path}
                 to={path}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`block py-2 font-medium transition-colors hover:text-amber-400 ${
+                className={`block py-2 px-4 font-medium transition-colors hover:text-amber-400 ${
                   isActive(path) ? 'text-amber-400' : 'text-white'
                 }`}
               >

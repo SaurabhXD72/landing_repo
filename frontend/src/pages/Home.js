@@ -50,58 +50,71 @@ const Home = () => {
   const photosRef = useRef(null);
 
   useEffect(() => {
+    let animationFrameId;
+
     const handleScroll = () => {
-      const scrollY = window.scrollY;
-      
-      // Parallax effect for hero section
-      if (heroRef.current) {
-        const translateY = scrollY * 0.5;
-        heroRef.current.style.transform = `translateY(${translateY}px)`;
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
       }
 
-      // Parallax effect for other sections
-      [aboutRef, blogRef, photosRef].forEach((ref, index) => {
-        if (ref.current) {
-          const rect = ref.current.getBoundingClientRect();
-          const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-          
-          if (isVisible) {
-            const translateY = (scrollY - (window.innerHeight * (index + 1))) * 0.2;
-            ref.current.style.transform = `translateY(${translateY}px)`;
-          }
+      animationFrameId = requestAnimationFrame(() => {
+        const scrollY = window.scrollY;
+        
+        // Lighter parallax effect for hero section
+        if (heroRef.current) {
+          const translateY = scrollY * 0.3; // Reduced from 0.5
+          heroRef.current.style.transform = `translateY(${translateY}px)`;
         }
+
+        // Much lighter parallax for other sections to improve performance
+        [aboutRef, blogRef, photosRef].forEach((ref, index) => {
+          if (ref.current) {
+            const rect = ref.current.getBoundingClientRect();
+            const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+            
+            if (isVisible) {
+              const translateY = (scrollY - (window.innerHeight * (index + 1))) * 0.1; // Reduced from 0.2
+              ref.current.style.transform = `translateY(${translateY}px)`;
+            }
+          }
+        });
       });
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, []);
 
   const blogPosts = getBlogPosts().slice(0, 3); // Get latest 3 posts
   
   const photoPlaceholders = [
     {
-      src: 'https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg',
+      src: 'https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
       alt: 'Mountain Lake Reflection'
     },
     {
-      src: 'https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg',
+      src: 'https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
       alt: 'Dawn at the Cabin'
     },
     {
-      src: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGV8ZW58MHx8fHwxNzUxMjI4MzU4fDA&ixlib=rb-4.0.3&q=85',
+      src: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&h=400&q=80',
       alt: 'Misty Valley'
     },
     {
-      src: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwyfHxsYW5kc2NhcGV8ZW58MHx8fHwxNzUxMjI4MzU4fDA&ixlib=rb-4.0.3&q=85',
+      src: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&h=400&q=80',
       alt: 'Mountain Valley Stream'
     },
     {
-      src: 'https://images.pexels.com/photos/32770300/pexels-photo-32770300.jpeg',
+      src: 'https://images.pexels.com/photos/32770300/pexels-photo-32770300.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
       alt: 'Shadow Play'
     },
     {
-      src: 'https://images.pexels.com/photos/32769142/pexels-photo-32769142.jpeg',
+      src: 'https://images.pexels.com/photos/32769142/pexels-photo-32769142.jpeg?auto=compress&cs=tinysrgb&w=400&h=400&fit=crop',
       alt: 'Natural Beauty'
     }
   ];
@@ -184,9 +197,10 @@ const Home = () => {
             <div className="relative group">
               <div className="w-full h-80 bg-gradient-to-br from-slate-700 to-slate-600 rounded-lg overflow-hidden transform group-hover:scale-105 transition-transform duration-300">
                 <img
-                  src="https://images.pexels.com/photos/4549411/pexels-photo-4549411.jpeg"
+                  src="https://images.pexels.com/photos/4549411/pexels-photo-4549411.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop"
                   alt="Developer workspace"
                   className="w-full h-full object-cover opacity-80 group-hover:opacity-90 transition-opacity duration-300"
+                  loading="lazy"
                 />
               </div>
               <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-amber-400/20 rounded-lg blur-xl"></div>
@@ -209,7 +223,7 @@ const Home = () => {
                 <div className="bg-slate-800/50 rounded-lg overflow-hidden hover:bg-slate-800/70 transition-all duration-300 transform group-hover:scale-105 group-hover:shadow-xl">
                   <div className="h-48 bg-gradient-to-br from-amber-400/20 to-slate-700 flex items-center justify-center group-hover:from-amber-400/30 transition-colors duration-300">
                     <img
-                      src={`https://picsum.photos/400/300?random=${index + 1}`}
+                      src={`https://picsum.photos/400/300?random=${index + 1}&auto=compress&cs=tinysrgb&w=400&h=300&fit=crop`}
                       alt={post.title}
                       className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-300"
                       loading="lazy"
@@ -253,7 +267,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Photography Preview Section - Fixed spacing and button overlap */}
+      {/* Photography Preview Section - Optimized and fixed spacing */}
       <section ref={photosRef} className="py-24 bg-slate-800/50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
@@ -292,8 +306,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Contact CTA Section */}
-      <section className="py-20">
+      {/* Contact CTA Section - Moved below photography section with proper spacing */}
+      <section className="py-24">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold mb-4 text-amber-400">Let's Build Something Together</h2>
           <p className="text-slate-300 text-lg mb-8 max-w-2xl mx-auto">

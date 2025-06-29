@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -34,34 +33,35 @@ const Contact = () => {
       console.log('Submitting form data:', formData);
       console.log('Backend URL:', process.env.REACT_APP_BACKEND_URL);
       
-      const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/contact`, formData, {
+      // Use fetch instead of axios for better debugging
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/contact`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        timeout: 10000, // 10 second timeout
+        body: JSON.stringify(formData),
       });
       
-      console.log('Form submission response:', response);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
       
-      if (response.status === 200 && response.data.success) {
+      const responseData = await response.json();
+      console.log('Response data:', responseData);
+      
+      if (response.ok && responseData.success) {
         setStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
         
         // Auto-hide success message after 5 seconds
         setTimeout(() => setStatus(''), 5000);
       } else {
+        console.error('Server responded with error:', responseData);
         setStatus('error');
+        setTimeout(() => setStatus(''), 5000);
       }
     } catch (error) {
-      console.error('Contact form error:', error);
-      console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
+      console.error('Network or parsing error:', error);
       setStatus('error');
-      
-      // Auto-hide error message after 5 seconds
       setTimeout(() => setStatus(''), 5000);
     } finally {
       setLoading(false);
