@@ -29,9 +29,12 @@ const Header = () => {
           {/* Logo */}
           <Link 
             to="/" 
-            className="text-2xl font-bold text-white hover:text-amber-400 transition-colors"
+            className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
           >
-            SD
+            <Logo className="w-10 h-10" animate={true} />
+            <span className="text-xl font-bold text-white hidden sm:block">
+              SD
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
