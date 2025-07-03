@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
+import { Toaster } from 'react-hot-toast';
+
 
 // Components
 import Header from './components/Header';
@@ -18,7 +20,6 @@ import { initGA, trackPageView } from './utils/analytics';
 
 function App() {
   useEffect(() => {
-    // Initialize Google Analytics
     const gaId = process.env.REACT_APP_GA_ID;
     if (gaId) {
       initGA(gaId);
@@ -26,13 +27,13 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Track page views
     trackPageView(window.location.pathname + window.location.search);
   }, []);
 
   return (
     <Router>
       <div className="App">
+        <Toaster position="top-right" reverseOrder={false} />
         <Header />
         <main>
           <Routes>
@@ -48,5 +49,6 @@ function App() {
     </Router>
   );
 }
+
 
 export default App;
