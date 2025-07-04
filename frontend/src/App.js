@@ -50,25 +50,5 @@ function App() {
   );
 }
 
-  return (
-    <Router>
-      <div className="App">
-        <Toaster position="top-right" reverseOrder={false} />
-        <Header />
-        <main>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/photography" element={<Photography />} />
-            <Route path="/contact" element={<Contact />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
-  );
-}
-
 
 export default App;
