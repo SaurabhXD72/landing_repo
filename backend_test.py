@@ -24,9 +24,11 @@ class TestBackendAPI(unittest.TestCase):
 
     def test_api_root(self):
         """Test the /api/ endpoint"""
+        print(f"Testing API root endpoint: {API_BASE_URL}/")
         response = requests.get(f"{API_BASE_URL}/")
         self.assertEqual(response.status_code, 200)
         data = response.json()
+        print(f"Response: {data}")
         self.assertIn("message", data)
         self.assertIn("version", data)
         self.assertIn("status", data)
@@ -37,9 +39,11 @@ class TestBackendAPI(unittest.TestCase):
 
     def test_health_endpoint(self):
         """Test the /api/health endpoint"""
+        print(f"Testing health endpoint: {API_BASE_URL}/health")
         response = requests.get(f"{API_BASE_URL}/health")
         self.assertEqual(response.status_code, 200)
         data = response.json()
+        print(f"Response: {data}")
         self.assertIn("status", data)
         self.assertIn("timestamp", data)
         self.assertIn("database", data)
