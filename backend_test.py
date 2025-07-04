@@ -55,6 +55,7 @@ class TestContactAPI(unittest.TestCase):
     
     def test_contact_form_submission(self):
         """Test the /api/contact POST endpoint"""
+        print(f"Testing contact form submission: {API_BASE_URL}/contact")
         contact_data = {
             "name": "Test User",
             "email": "test@example.com",
@@ -65,6 +66,7 @@ class TestContactAPI(unittest.TestCase):
         response = requests.post(f"{API_BASE_URL}/contact", json=contact_data)
         self.assertEqual(response.status_code, 200)
         data = response.json()
+        print(f"Response: {data}")
         self.assertIn("success", data)
         self.assertIn("message", data)
         self.assertIn("id", data)
@@ -77,6 +79,7 @@ class TestContactAPI(unittest.TestCase):
     
     def test_contact_messages_retrieval(self):
         """Test the /api/contact/messages GET endpoint"""
+        print(f"Testing contact messages retrieval: {API_BASE_URL}/contact/messages")
         # First submit a contact form to ensure there's data
         contact_id = self.test_contact_form_submission()
         
@@ -84,6 +87,7 @@ class TestContactAPI(unittest.TestCase):
         response = requests.get(f"{API_BASE_URL}/contact/messages")
         self.assertEqual(response.status_code, 200)
         data = response.json()
+        print(f"Retrieved {len(data)} contact messages")
         self.assertIsInstance(data, list)
         
         # Verify our submitted message is in the list
