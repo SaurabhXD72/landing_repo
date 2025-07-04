@@ -167,8 +167,14 @@ def run_tests():
     return result
 
 if __name__ == "__main__":
-    result = run_tests()
-    
-    # Exit with non-zero code if tests failed
-    if not result.wasSuccessful():
+    print("Starting tests...")
+    try:
+        result = run_tests()
+        print(f"Tests completed. Success: {result.wasSuccessful()}")
+        
+        # Exit with non-zero code if tests failed
+        if not result.wasSuccessful():
+            sys.exit(1)
+    except Exception as e:
+        print(f"Error running tests: {e}")
         sys.exit(1)
