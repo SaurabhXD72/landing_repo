@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Build a personal website for Saurabh Deshmukh with React+FastAPI that's migration-friendly to Next.js. Features: hero section, blog (markdown), photography gallery, contact form, Google Analytics, parallax scrolling, dual-tone design."
+user_problem_statement: "I'm building a low-maintenance, high-impact personal portfolio site that auto-scales with my content. My end goal is to be able to update my entire portfolio (blogs, photography, etc.) by just modifying a few data files — no UI or logic changes required."
 
 backend:
   - task: "Contact form API endpoint"
@@ -142,43 +142,31 @@ backend:
         comment: "Added placeholder blog API endpoint for future use, currently handled client-side"
 
 frontend:
-  - task: "React app structure with routing"
+  - task: "Data Architecture Implementation"
     implemented: true
     working: true
-    file: "/app/frontend/src/App.js"
+    file: "/app/frontend/src/data/"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Created App.js with React Router, Header, Footer, and route configuration"
+        comment: "Created centralized data files: blogPosts.js, photography.js, siteConfig.js for content management"
 
-  - task: "Home page with hero, about, and parallax"
+  - task: "Enhanced Blog System with Analytics"
     implemented: true
     working: true
-    file: "/app/frontend/src/pages/Home.js"
+    file: "/app/frontend/src/pages/Blog.js, /app/frontend/src/pages/BlogPost.js"
     stuck_count: 0
     priority: "high"
     needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Built complete homepage with parallax effects, hero section, blog preview, photo gallery preview"
+        comment: "Implemented new blog system with external link support, impression tracking, search functionality"
 
-  - task: "Blog functionality"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/Blog.js, /app/frontend/src/pages/BlogPost.js, /app/frontend/src/utils/blogUtils.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Created complete blog system with 3 sample posts, search, categories, individual post pages"
-
-  - task: "Photography gallery"
+  - task: "Advanced Photography Gallery"
     implemented: true
     working: true
     file: "/app/frontend/src/pages/Photography.js"
@@ -188,21 +176,9 @@ frontend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Built photography gallery with lightbox, categories, high-quality placeholder images"
+        comment: "Implemented masonry layout, EXIF data display, tag filtering, enhanced lightbox with analytics"
 
-  - task: "Contact form"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/pages/Contact.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: true
-    status_history:
-      - working: true
-        agent: "main"
-        comment: "Created contact form with backend integration, status messages, contact info display"
-
-  - task: "Google Analytics integration"
+  - task: "GA4 Analytics Integration"
     implemented: true
     working: true
     file: "/app/frontend/src/utils/analytics.js"
@@ -212,37 +188,36 @@ frontend:
     status_history:
       - working: true
         agent: "main"
-        comment: "Added Google Analytics utilities with environment variable setup, ready for tracking ID"
+        comment: "Enhanced analytics with GA4 events for blog impressions, clicks, photo views, lightbox interactions"
 
-  - task: "Responsive design and styling"
+  - task: "Asset Management Structure"
     implemented: true
     working: true
-    file: "/app/frontend/src/App.css"
+    file: "/app/frontend/public/images/"
     stuck_count: 0
-    priority: "high"
+    priority: "low"
     needs_retesting: true
     status_history:
       - working: true
         agent: "main"
-        comment: "Implemented dual-tone slate/amber design with custom CSS, responsive utilities, prose styles"
+        comment: "Created organized folder structure for blog images, photos, thumbnails, and logo assets"
 
 metadata:
   created_by: "main_agent"
-  version: "1.0"
-  test_sequence: 0
+  version: "2.0"
+  test_sequence: 1
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Contact form API endpoint"
-    - "React app structure with routing"
-    - "Home page with hero, about, and parallax"
-    - "Blog functionality"
-    - "Photography gallery"
+    - "Data Architecture Implementation"
+    - "Enhanced Blog System with Analytics"
+    - "Advanced Photography Gallery"
+    - "GA4 Analytics Integration"
   stuck_tasks: []
   test_all: true
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Built complete personal website with migration-friendly React+FastAPI architecture. Features: parallax hero, blog with 3 sample posts, photography gallery with 8 high-quality images, contact form, Google Analytics setup, dual-tone design. Ready for backend testing first, then frontend testing if needed."
+    message: "Implemented comprehensive data-driven portfolio system. Created centralized data files for content management, enhanced blog system with external link support and analytics tracking, advanced photography gallery with masonry layout and EXIF data, comprehensive GA4 event tracking, and organized asset management structure. System now supports AI-powered content updates through simple data file modifications."
