@@ -1,11 +1,129 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { getBlogPosts } from '../utils/blogUtils';
+import { getBlogPosts, searchPosts } from '../data/blogPosts';
+import { trackBlogImpression, trackBlogClick, trackSearchQuery } from '../utils/analytics';
+
+const BlogCard = ({ post, onImpression }) => {
+  const cardRef = useRef(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [hasTrackedImpression, setHasTrackedImpression] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTrackedImpression) {
+          onImpression(post.id, post.title);
+          setHasTrackedImpression(true);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [post.id, post.title, onImpression, hasTrackedImpression]);
+
+  const handleCardClick = () => {
+    if (post.externalLink) {
+      trackBlogClick(post.id, post.title, true);
+      window.open(post.externalLink, '_blank', 'noopener,noreferrer');
+    } else {
+      trackBlogClick(post.id, post.title, false);
+    }
+  };
+
+  return (
+    <article 
+      ref={cardRef}
+      className="group bg-slate-800/50 rounded-xl p-8 hover:bg-slate-800/70 transition-all duration-300 transform hover:scale-[1.02]"
+    >
+      <div className="flex flex-col md:flex-row gap-6">
+        {/* Content */}
+        <div className="flex-1">
+          <div className="flex items-center text-sm text-amber-400 mb-3">
+            <span>{post.date}</span>
+            <span className="mx-2">•</span>
+            <span>{post.readTime}</span>
+            {post.tags && (
+              <>
+                <span className="mx-2">•</span>
+                <div className="flex gap-2">
+                  {post.tags.map(tag => (
+                    <span key={tag} className="px-2 py-1 bg-amber-400/20 text-amber-400 rounded-full text-xs">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          
+          <h2 className="text-2xl font-bold mb-4 group-hover:text-amber-400 transition-colors">
+            {post.title}
+          </h2>
+          
+          <p className="text-slate-300 text-lg leading-relaxed mb-6">
+            {post.excerpt}
+          </p>
+          
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleCardClick}
+              className="inline-flex items-center text-amber-400 hover:text-amber-300 font-medium transition-colors group"
+            >
+              {post.externalLink ? 'Read on Medium' : 'Read Full Story'}
+              <svg className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </button>
+            
+            {post.externalLink && (
+              <span className="text-xs text-slate-400 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+                External link
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Thumbnail */}
+        <div className="md:w-48 h-32 md:h-auto bg-gradient-to-br from-amber-400/20 to-slate-700 rounded-lg flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+          {post.previewImage ? (
+            <>
+              {!imageLoaded && (
+                <div className="absolute inset-0 bg-slate-700 animate-pulse flex items-center justify-center">
+                  <span className="text-2xl opacity-50">📝</span>
+                </div>
+              )}
+              <img
+                src={post.previewImage}
+                alt={post.title}
+                className={`w-full h-full object-cover transition-opacity duration-300 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageLoaded(false)}
+              />
+            </>
+          ) : (
+            <span className="text-4xl opacity-50">📝</span>
+          )}
+        </div>
+      </div>
+    </article>
+  );
+};
 
 const Blog = () => {
   const [blogPosts, setBlogPosts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPosts, setFilteredPosts] = useState([]);
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   useEffect(() => {
     const posts = getBlogPosts();
@@ -14,17 +132,28 @@ const Blog = () => {
   }, []);
 
   useEffect(() => {
-    if (searchTerm) {
-      const filtered = blogPosts.filter(post =>
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())))
-      );
-      setFilteredPosts(filtered);
-    } else {
-      setFilteredPosts(blogPosts);
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
     }
+
+    const timeout = setTimeout(() => {
+      if (searchTerm.trim()) {
+        const filtered = searchPosts(searchTerm);
+        setFilteredPosts(filtered);
+        trackSearchQuery(searchTerm, filtered.length, 'blog');
+      } else {
+        setFilteredPosts(blogPosts);
+      }
+    }, 500);
+
+    setSearchTimeout(timeout);
+
+    return () => clearTimeout(timeout);
   }, [searchTerm, blogPosts]);
+
+  const handleBlogImpression = (postId, title) => {
+    trackBlogImpression(postId, title);
+  };
 
   // Set page title for SEO
   useEffect(() => {
@@ -78,59 +207,12 @@ const Blog = () => {
             </div>
           ) : (
             <div className="space-y-8">
-              {filteredPosts.map((post, index) => (
-                <article 
-                  key={post.slug} 
-                  className="group bg-slate-800/50 rounded-xl p-8 hover:bg-slate-800/70 transition-all duration-300 transform hover:scale-[1.02]"
-                >
-                  <div className="flex flex-col md:flex-row gap-6">
-                    {/* Content */}
-                    <div className="flex-1">
-                      <div className="flex items-center text-sm text-amber-400 mb-3">
-                        <span>{post.date}</span>
-                        <span className="mx-2">•</span>
-                        <span>{post.readTime}</span>
-                        {post.tags && (
-                          <>
-                            <span className="mx-2">•</span>
-                            <div className="flex gap-2">
-                              {post.tags.map(tag => (
-                                <span key={tag} className="px-2 py-1 bg-amber-400/20 text-amber-400 rounded-full text-xs">
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                      
-                      <h2 className="text-2xl font-bold mb-4 group-hover:text-amber-400 transition-colors">
-                        <Link to={`/blog/${post.slug}`}>
-                          {post.title}
-                        </Link>
-                      </h2>
-                      
-                      <p className="text-slate-300 text-lg leading-relaxed mb-6">
-                        {post.excerpt}
-                      </p>
-                      
-                      <Link
-                        to={`/blog/${post.slug}`}
-                        className="inline-flex items-center text-amber-400 hover:text-amber-300 font-medium transition-colors group"
-                      >
-                        Read Full Story
-                        <svg className="ml-2 w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                      </Link>
-                    </div>
-
-                    {/* Thumbnail */}
-                    <div className="md:w-48 h-32 md:h-auto bg-gradient-to-br from-amber-400/20 to-slate-700 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-4xl opacity-50">📝</span>
-                    </div>
-                  </div>
-                </article>
+              {filteredPosts.map((post) => (
+                <BlogCard 
+                  key={post.id} 
+                  post={post} 
+                  onImpression={handleBlogImpression}
+                />
               ))}
             </div>
           )}
