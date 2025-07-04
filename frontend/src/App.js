@@ -15,20 +15,40 @@ import BlogPost from './pages/BlogPost';
 import Photography from './pages/Photography';
 import Contact from './pages/Contact';
 
-// Google Analytics
-import { initGA, trackPageView } from './utils/analytics';
+// Google Analytics and Configuration
+import { initializeAnalytics, trackPageView } from './utils/analytics';
+import { SITE_CONFIG } from './data/siteConfig';
 
 function App() {
   useEffect(() => {
-    const gaId = process.env.REACT_APP_GA_ID;
-    if (gaId) {
-      initGA(gaId);
-    }
+    // Initialize Google Analytics
+    initializeAnalytics();
   }, []);
 
   useEffect(() => {
+    // Track initial page view
     trackPageView(window.location.pathname + window.location.search);
   }, []);
+
+  return (
+    <Router>
+      <div className="App">
+        <Toaster position="top-right" reverseOrder={false} />
+        <Header />
+        <main>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/photography" element={<Photography />} />
+            <Route path="/contact" element={<Contact />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </Router>
+  );
+}
 
   return (
     <Router>
