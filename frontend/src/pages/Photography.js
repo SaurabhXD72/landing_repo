@@ -1,109 +1,161 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Masonry from 'react-masonry-css';
+import { getPhotos, getPhotosByTag, getAllPhotoTags, formatExifData } from '../data/photography';
+import { trackPhotoView, trackLightboxInteraction, trackTagFilter } from '../utils/analytics';
+
+const PhotoCard = ({ photo, onView }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [showExif, setShowExif] = useState(false);
+  const cardRef = useRef(null);
+  const [hasTrackedView, setHasTrackedView] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasTrackedView) {
+          onView(photo.id, photo.title, photo.tags);
+          setHasTrackedView(true);
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [photo.id, photo.title, photo.tags, onView, hasTrackedView]);
+
+  return (
+    <div 
+      ref={cardRef}
+      className="mb-6 break-inside-avoid relative"
+      onMouseEnter={() => setShowExif(true)}
+      onMouseLeave={() => setShowExif(false)}
+    >
+      <div className="group relative cursor-pointer overflow-hidden rounded-lg bg-slate-800">
+        {!imageLoaded && (
+          <div className="w-full h-64 bg-slate-700 animate-pulse flex items-center justify-center">
+            <span className="text-4xl opacity-50">📸</span>
+          </div>
+        )}
+        
+        <img
+          src={photo.imageUrl}
+          alt={photo.title}
+          className={`w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500 ${
+            imageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+          onLoad={() => setImageLoaded(true)}
+          onError={() => setImageLoaded(false)}
+          loading="lazy"
+        />
+        
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute bottom-4 left-4 right-4">
+            <h3 className="text-white font-semibold mb-1 text-sm">{photo.title}</h3>
+            <p className="text-slate-300 text-xs mb-2">{photo.location}</p>
+            {photo.tags && (
+              <div className="flex flex-wrap gap-1">
+                {photo.tags.map(tag => (
+                  <span key={tag} className="px-2 py-1 bg-amber-400/20 text-amber-400 rounded-full text-xs">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* EXIF Tooltip */}
+        {showExif && photo.settings && (
+          <div className="absolute top-4 right-4 bg-slate-900/90 backdrop-blur-sm rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="text-xs text-white">
+              <p className="font-semibold mb-1">{photo.camera}</p>
+              <p>{formatExifData(photo)}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Zoom Icon */}
+        <div className="absolute top-4 left-4 bg-slate-900/50 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Photography = () => {
+  const [photos, setPhotos] = useState([]);
+  const [filteredPhotos, setFilteredPhotos] = useState([]);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
-  const [photoIndex, setPhotoIndex] = useState(0);
+  const [activeTag, setActiveTag] = useState('All');
   const [loading, setLoading] = useState(true);
+  const [allTags, setAllTags] = useState([]);
 
-  // High-quality placeholder photos
-  const photos = [
-    {
-      id: 1,
-      src: 'https://images.pexels.com/photos/346529/pexels-photo-346529.jpeg',
-      title: 'Mountain Lake Reflection',
-      description: 'Serene morning light reflecting off pristine mountain lake waters.',
-      category: 'Landscape',
-      location: 'Mountain Region'
-    },
-    {
-      id: 2,
-      src: 'https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg',
-      title: 'Dawn at the Cabin',
-      description: 'A peaceful cabin nestled by the lake during golden hour.',
-      category: 'Landscape',
-      location: 'Alpine Lake'
-    },
-    {
-      id: 3,
-      src: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwxfHxsYW5kc2NhcGV8ZW58MHx8fHwxNzUxMjI4MzU4fDA&ixlib=rb-4.0.3&q=85',
-      title: 'Misty Valley',
-      description: 'Fog rolling through the valley, creating an ethereal landscape.',
-      category: 'Landscape',
-      location: 'Valley Vista'
-    },
-    {
-      id: 4,
-      src: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwyfHxsYW5kc2NhcGV8ZW58MHx8fHwxNzUxMjI4MzU4fDA&ixlib=rb-4.0.3&q=85',
-      title: 'Mountain Valley Stream',
-      description: 'Crystal clear waters flowing through a mountain valley.',
-      category: 'Landscape',
-      location: 'Mountain Stream'
-    },
-    {
-      id: 5,
-      src: 'https://images.pexels.com/photos/32770300/pexels-photo-32770300.jpeg',
-      title: 'Shadow Play',
-      description: 'Creative use of shadows and light in portrait photography.',
-      category: 'Portrait',
-      location: 'Studio'
-    },
-    {
-      id: 6,
-      src: 'https://images.pexels.com/photos/32769142/pexels-photo-32769142.jpeg',
-      title: 'Natural Beauty',
-      description: 'Portrait enhanced by natural elements and soft lighting.',
-      category: 'Portrait',
-      location: 'Outdoor Studio'
-    },
-    {
-      id: 7,
-      src: 'https://images.pexels.com/photos/4549411/pexels-photo-4549411.jpeg',
-      title: 'Tools of the Trade',
-      description: 'Behind the scenes - camera gear and creative workspace.',
-      category: 'Equipment',
-      location: 'Studio'
-    },
-    {
-      id: 8,
-      src: 'https://images.unsplash.com/photo-1505934763054-93cd118ee9dc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHwzfHxwaG90b2dyYXBoeSUyMHBvcnRmb2xpb3xlbnwwfHx8fDE3NTEyMjgzNDZ8MA&ixlib=rb-4.0.3&q=85',
-      title: 'Still Life',
-      description: 'Artistic composition with everyday objects and natural light.',
-      category: 'Still Life',
-      location: 'Studio'
-    }
-  ];
+  // Masonry breakpoints
+  const breakpointColumnsObj = {
+    default: 4,
+    1100: 3,
+    700: 2,
+    500: 1
+  };
 
-  const categories = ['All', ...new Set(photos.map(photo => photo.category))];
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [filteredPhotos, setFilteredPhotos] = useState(photos);
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      setLoading(true);
+      const photoData = getPhotos();
+      const tags = getAllPhotoTags();
+      
+      setPhotos(photoData);
+      setFilteredPhotos(photoData);
+      setAllTags(['All', ...tags]);
+      setLoading(false);
+    };
+
+    fetchPhotos();
+  }, []);
 
   useEffect(() => {
     document.title = 'Photography - Saurabh Deshmukh';
     document.querySelector('meta[name="description"]')?.setAttribute('content', 
       'Explore my photography portfolio featuring landscapes, portraits, and creative captures.'
     );
-    
-    // Simulate loading
-    setTimeout(() => setLoading(false), 1000);
   }, []);
 
   useEffect(() => {
-    if (activeCategory === 'All') {
+    if (activeTag === 'All') {
       setFilteredPhotos(photos);
     } else {
-      setFilteredPhotos(photos.filter(photo => photo.category === activeCategory));
+      const filtered = getPhotosByTag(activeTag);
+      setFilteredPhotos(filtered);
+      trackTagFilter(activeTag, filtered.length, 'photography');
     }
-  }, [activeCategory]);
+  }, [activeTag, photos]);
 
-  const openLightbox = (photo, index) => {
+  const handleTagClick = (tag) => {
+    setActiveTag(tag);
+  };
+
+  const handlePhotoView = (photoId, title, tags) => {
+    trackPhotoView(photoId, title, tags);
+  };
+
+  const openLightbox = (photo) => {
     setSelectedPhoto(photo);
-    setPhotoIndex(index);
     document.body.style.overflow = 'hidden';
+    trackLightboxInteraction('open', photo.id);
   };
 
   const closeLightbox = () => {
     setSelectedPhoto(null);
     document.body.style.overflow = 'unset';
+    trackLightboxInteraction('close', selectedPhoto?.id);
   };
 
   const navigatePhoto = useCallback((direction) => {
@@ -117,7 +169,7 @@ const Photography = () => {
     }
     
     setSelectedPhoto(filteredPhotos[newIndex]);
-    setPhotoIndex(newIndex);
+    trackLightboxInteraction(direction, filteredPhotos[newIndex].id);
   }, [selectedPhoto, filteredPhotos]);
 
   // Keyboard navigation
@@ -158,51 +210,35 @@ const Photography = () => {
           </p>
         </div>
 
-        {/* Category Filter */}
+        {/* Tag Filter */}
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {categories.map(category => (
+          {allTags.map(tag => (
             <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
+              key={tag}
+              onClick={() => handleTagClick(tag)}
               className={`px-6 py-2 rounded-full font-medium transition-all duration-200 ${
-                activeCategory === category
+                activeTag === tag
                   ? 'bg-amber-400 text-slate-900'
                   : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 hover:text-amber-400'
               }`}
             >
-              {category}
+              {tag}
             </button>
           ))}
         </div>
 
-        {/* Photo Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredPhotos.map((photo, index) => (
-            <div
-              key={photo.id}
-              className="group relative cursor-pointer overflow-hidden rounded-lg aspect-square bg-slate-800"
-              onClick={() => openLightbox(photo, index)}
-            >
-              <img
-                src={photo.src}
-                alt={photo.title}
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                loading="lazy"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="absolute bottom-4 left-4 right-4">
-                  <h3 className="text-white font-semibold mb-1">{photo.title}</h3>
-                  <p className="text-slate-300 text-sm">{photo.location}</p>
-                </div>
-              </div>
-              <div className="absolute top-4 right-4 bg-slate-900/50 backdrop-blur-sm rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </div>
+        {/* Photo Gallery - Masonry Layout */}
+        <Masonry
+          breakpointCols={breakpointColumnsObj}
+          className="flex w-auto -ml-6"
+          columnClassName="pl-6 bg-clip-padding"
+        >
+          {filteredPhotos.map((photo) => (
+            <div key={photo.id} onClick={() => openLightbox(photo)}>
+              <PhotoCard photo={photo} onView={handlePhotoView} />
             </div>
           ))}
-        </div>
+        </Masonry>
 
         {/* Empty State */}
         {filteredPhotos.length === 0 && (
@@ -226,13 +262,13 @@ const Photography = () => {
         </div>
       </div>
 
-      {/* Lightbox Modal */}
+      {/* Enhanced Lightbox Modal */}
       {selectedPhoto && (
         <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
           {/* Close Button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-6 right-6 text-white/70 hover:text-white z-10"
+            className="absolute top-6 right-6 text-white/70 hover:text-white z-10 transition-colors"
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -242,7 +278,7 @@ const Photography = () => {
           {/* Navigation Buttons */}
           <button
             onClick={() => navigatePhoto('prev')}
-            className="absolute left-6 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white z-10"
+            className="absolute left-6 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white z-10 transition-colors"
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -251,30 +287,51 @@ const Photography = () => {
 
           <button
             onClick={() => navigatePhoto('next')}
-            className="absolute right-6 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white z-10"
+            className="absolute right-6 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white z-10 transition-colors"
           >
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
-          {/* Image */}
-          <div className="max-w-5xl max-h-full flex flex-col">
+          {/* Image Container */}
+          <div className="max-w-6xl max-h-full flex flex-col items-center">
             <img
-              src={selectedPhoto.src}
+              src={selectedPhoto.imageUrl}
               alt={selectedPhoto.title}
-              className="max-w-full max-h-[70vh] object-contain"
+              className="max-w-full max-h-[70vh] object-contain mb-6"
             />
             
-            {/* Image Info */}
-            <div className="text-center mt-6 text-white">
+            {/* Enhanced Image Info */}
+            <div className="text-center text-white bg-slate-900/50 backdrop-blur-sm rounded-xl p-6 max-w-2xl">
               <h3 className="text-2xl font-bold mb-2">{selectedPhoto.title}</h3>
-              <p className="text-slate-300 mb-2">{selectedPhoto.description}</p>
-              <div className="flex justify-center gap-4 text-sm text-slate-400">
-                <span>{selectedPhoto.category}</span>
-                <span>•</span>
-                <span>{selectedPhoto.location}</span>
+              <p className="text-slate-300 mb-4">{selectedPhoto.caption}</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-amber-400 font-semibold mb-1">Details</p>
+                  <p className="text-slate-300">{selectedPhoto.location}</p>
+                  <p className="text-slate-400">{selectedPhoto.date}</p>
+                </div>
+                
+                {selectedPhoto.settings && (
+                  <div>
+                    <p className="text-amber-400 font-semibold mb-1">Camera Settings</p>
+                    <p className="text-slate-300">{selectedPhoto.camera}</p>
+                    <p className="text-slate-400">{formatExifData(selectedPhoto)}</p>
+                  </div>
+                )}
               </div>
+              
+              {selectedPhoto.tags && (
+                <div className="flex flex-wrap justify-center gap-2 mt-4">
+                  {selectedPhoto.tags.map(tag => (
+                    <span key={tag} className="px-3 py-1 bg-amber-400/20 text-amber-400 rounded-full text-xs">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
