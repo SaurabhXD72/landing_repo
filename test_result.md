@@ -126,11 +126,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Added /api/health, /api/, root endpoints with proper responses"
+      - working: true
+        agent: "testing"
+        comment: "Tested /api/health and /api/ endpoints - both return correct status codes and expected data. Health check confirms database connection is working."
 
   - task: "Blog posts API structure"
     implemented: true
