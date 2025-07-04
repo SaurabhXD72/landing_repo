@@ -161,7 +161,7 @@ def run_tests():
     suite.addTests(loader.loadTestsFromTestCase(TestAnalyticsAndNewsletterAPI))
     
     # Run the tests
-    runner = unittest.TextTestRunner(verbosity=2)
+    runner = unittest.TextTestRunner(verbosity=3)
     result = runner.run(suite)
     
     return result
