@@ -107,9 +107,11 @@ class TestBlogAPI(unittest.TestCase):
     
     def test_blog_posts_endpoint(self):
         """Test the /api/blog/posts GET endpoint"""
+        print(f"Testing blog posts endpoint: {API_BASE_URL}/blog/posts")
         response = requests.get(f"{API_BASE_URL}/blog/posts")
         self.assertEqual(response.status_code, 200)
         data = response.json()
+        print(f"Response: {data}")
         self.assertIn("message", data)
         self.assertIn("migration_ready", data)
         self.assertTrue(data["migration_ready"])
@@ -119,6 +121,7 @@ class TestAnalyticsAndNewsletterAPI(unittest.TestCase):
     
     def test_analytics_event_tracking(self):
         """Test the /api/analytics/event POST endpoint"""
+        print(f"Testing analytics event tracking: {API_BASE_URL}/analytics/event")
         event_data = {
             "event": "page_view",
             "page": "/blog",
@@ -128,12 +131,14 @@ class TestAnalyticsAndNewsletterAPI(unittest.TestCase):
         response = requests.post(f"{API_BASE_URL}/analytics/event", json=event_data)
         self.assertEqual(response.status_code, 200)
         data = response.json()
+        print(f"Response: {data}")
         self.assertIn("success", data)
         self.assertIn("message", data)
         self.assertTrue(data["success"])
     
     def test_newsletter_subscription(self):
         """Test the /api/newsletter/subscribe POST endpoint"""
+        print(f"Testing newsletter subscription: {API_BASE_URL}/newsletter/subscribe")
         email_data = {
             "email": "newsletter@test.com"
         }
@@ -141,12 +146,14 @@ class TestAnalyticsAndNewsletterAPI(unittest.TestCase):
         response = requests.post(f"{API_BASE_URL}/newsletter/subscribe", json=email_data)
         self.assertEqual(response.status_code, 200)
         data = response.json()
+        print(f"Response: {data}")
         self.assertIn("success", data)
         self.assertIn("message", data)
         self.assertTrue(data["success"])
     
     def test_newsletter_subscription_error(self):
         """Test error handling for /api/newsletter/subscribe POST endpoint"""
+        print(f"Testing newsletter subscription error handling: {API_BASE_URL}/newsletter/subscribe")
         # Missing email should return an error
         email_data = {}
         
@@ -154,6 +161,7 @@ class TestAnalyticsAndNewsletterAPI(unittest.TestCase):
         # The server might return different error codes (400 or 404) depending on how it's configured
         self.assertIn(response.status_code, [400, 404])
         data = response.json()
+        print(f"Response: {data}")
         self.assertIn("detail", data)
 
 def run_tests():
