@@ -3,15 +3,15 @@
 
 export const PHOTOS = [
   {
-    id: 'himalayan-sunrise',
-    title: 'Himalayan Sunrise',
-    caption: 'First light painting the peaks gold — sometimes the best shots happen when you can barely keep your eyes open.',
-    imageUrl: '/images/photos/himalayan-sunrise.jpg',
-    thumbnailUrl: '/images/photos/thumbs/himalayan-sunrise.jpg',
+    id: 'coastal-cliff-landscape',
+    title: 'Coastal Cliff Dawn',
+    caption: 'The rugged coastline painted in golden hour light — nature\'s masterpiece unfolds with every sunrise.',
+    imageUrl: 'https://images.pexels.com/photos/3558637/pexels-photo-3558637.jpeg',
+    thumbnailUrl: 'https://images.pexels.com/photos/3558637/pexels-photo-3558637.jpeg?auto=compress&cs=tinysrgb&w=400',
     date: '2024-12-15',
-    tags: ['Landscape', 'Mountains', 'Sunrise'],
+    tags: ['Landscape', 'Coastal', 'Sunrise', 'Nature'],
     camera: 'Sony A7IV',
-    location: 'Himachal Pradesh, India',
+    location: 'Pacific Coast',
     settings: {
       aperture: 'f/8',
       shutter: '1/125s',
@@ -20,19 +20,19 @@ export const PHOTOS = [
     }
   },
   {
-    id: 'monsoon-reflection',
-    title: 'Monsoon Reflection',
-    caption: 'Rain-soaked streets make the best mirrors. This shot happened during a random evening walk.',
-    imageUrl: '/images/photos/monsoon-reflection.jpg',
-    thumbnailUrl: '/images/photos/thumbs/monsoon-reflection.jpg',
+    id: 'mountain-lake-reflection',
+    title: 'Mountain Mirror',
+    caption: 'Perfect stillness creates perfect reflections — sometimes the best moments happen in complete silence.',
+    imageUrl: 'https://images.pexels.com/photos/2613946/pexels-photo-2613946.jpeg',
+    thumbnailUrl: 'https://images.pexels.com/photos/2613946/pexels-photo-2613946.jpeg?auto=compress&cs=tinysrgb&w=400',
     date: '2024-11-28',
-    tags: ['Street', 'Rain', 'Reflection'],
+    tags: ['Landscape', 'Mountains', 'Reflection', 'Sunset'],
     camera: 'Sony A7IV',
-    location: 'Mumbai, India',
+    location: 'Alpine Lake Region',
     settings: {
-      aperture: 'f/4',
+      aperture: 'f/11',
       shutter: '1/60s',
-      iso: '800',
+      iso: '100',
       focalLength: '35mm'
     }
   }
