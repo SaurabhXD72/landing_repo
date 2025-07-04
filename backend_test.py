@@ -169,11 +169,33 @@ def run_tests():
 if __name__ == "__main__":
     print("Starting tests...")
     try:
-        result = run_tests()
-        print(f"Tests completed. Success: {result.wasSuccessful()}")
+        # Run tests individually for better visibility
+        print("\n=== Testing Basic API Endpoints ===")
+        basic_suite = unittest.TestLoader().loadTestsFromTestCase(TestBackendAPI)
+        basic_result = unittest.TextTestRunner(verbosity=2).run(basic_suite)
+        
+        print("\n=== Testing Contact API ===")
+        contact_suite = unittest.TestLoader().loadTestsFromTestCase(TestContactAPI)
+        contact_result = unittest.TextTestRunner(verbosity=2).run(contact_suite)
+        
+        print("\n=== Testing Blog API ===")
+        blog_suite = unittest.TestLoader().loadTestsFromTestCase(TestBlogAPI)
+        blog_result = unittest.TextTestRunner(verbosity=2).run(blog_suite)
+        
+        print("\n=== Testing Analytics and Newsletter API ===")
+        analytics_suite = unittest.TestLoader().loadTestsFromTestCase(TestAnalyticsAndNewsletterAPI)
+        analytics_result = unittest.TextTestRunner(verbosity=2).run(analytics_suite)
+        
+        # Check if all tests passed
+        all_passed = (basic_result.wasSuccessful() and 
+                      contact_result.wasSuccessful() and 
+                      blog_result.wasSuccessful() and 
+                      analytics_result.wasSuccessful())
+        
+        print(f"\nAll tests completed. Success: {all_passed}")
         
         # Exit with non-zero code if tests failed
-        if not result.wasSuccessful():
+        if not all_passed:
             sys.exit(1)
     except Exception as e:
         print(f"Error running tests: {e}")
